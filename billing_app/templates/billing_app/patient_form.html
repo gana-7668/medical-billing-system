@@ -1,0 +1,156 @@
+<!-- templates/billing_app/patient_form.html -->
+{% load form_tags %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        let medicines = [];
+        let editingIndex = -1;
+
+        function renderTable() {
+            const tbody = document.querySelector('#med_table tbody');
+            tbody.innerHTML = '';
+            medicines.forEach((m, idx) => {
+                const row = tbody.insertRow(-1);
+                row.insertCell(0).innerText = m.medicine_name;
+                row.insertCell(1).innerText = m.quantity;
+                row.insertCell(2).innerText = Number(m.price).toFixed(2);
+                row.insertCell(3).innerText = (Number(m.quantity) * Number(m.price)).toFixed(2);
+                const actions = row.insertCell(4);
+                actions.innerHTML = `
+                    <button type="button" class="btn btn-sm btn-warning me-2" onclick="startEdit(${idx})">Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteMedicine(${idx})">Delete</button>
+                `;
+            });
+            document.getElementById('medicine_data').value = JSON.stringify(medicines);
+        }
+
+        function resetFormInputs() {
+            document.getElementById('medicine_name').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('price').value = '';
+        }
+
+        function addOrUpdateMedicine() {
+            const name = document.getElementById('medicine_name').value.trim();
+            const quantity = Number(document.getElementById('quantity').value);
+            const price = Number(document.getElementById('price').value);
+
+            if (!name || !quantity || !price) {
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                medicines[editingIndex] = { medicine_name: name, quantity: quantity, price: price };
+                editingIndex = -1;
+                document.getElementById('addBtn').innerText = '➕ Add';
+            } else {
+                medicines.push({ medicine_name: name, quantity: quantity, price: price });
+            }
+
+            resetFormInputs();
+            renderTable();
+        }
+
+        function startEdit(index) {
+            const m = medicines[index];
+            document.getElementById('medicine_name').value = m.medicine_name;
+            document.getElementById('quantity').value = m.quantity;
+            document.getElementById('price').value = m.price;
+            editingIndex = index;
+            document.getElementById('addBtn').innerText = '✔ Update';
+        }
+
+        function deleteMedicine(index) {
+            medicines.splice(index, 1);
+            if (editingIndex === index) {
+                editingIndex = -1;
+                document.getElementById('addBtn').innerText = '➕ Add';
+                resetFormInputs();
+            }
+            renderTable();
+        }
+    </script>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">📝 Patient Information</h3>
+                <form method="get" action="/patients/search/" class="d-flex" role="search">
+                    <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Search patient..." aria-label="Search">
+                    <button class="btn btn-sm btn-light" type="submit">Search</button>
+                </form>
+                <a href="/patients/list/" class="btn btn-sm btn-warning ms-2">View All Patients</a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% include 'billing_app/_header.html' %}
+            <div class="alert alert-info d-flex justify-content-between" role="alert">
+                <div><strong>आजचे पेशंट:</strong> {{ today_patients_count|default:0 }}</div>
+                <div><strong>आजचे बिल:</strong> {{ today_bills_count|default:0 }}</div>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                {% if existing_patient_id %}
+                    <input type="hidden" name="patient_id" value="{{ existing_patient_id }}">
+                {% endif %}
+                <div class="mb-3">
+                    {{ patient_form.name.label_tag }}  
+                    {{ patient_form.name|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    {{ patient_form.age.label_tag }}  
+                    {{ patient_form.age|add_class:"form-control" }}
+                </div>
+                <div class="mb-3">
+                    {{ patient_form.phone.label_tag }}  
+                    {{ patient_form.phone|add_class:"form-control" }}
+                </div>
+
+                <hr>
+                <h4>💊 Add Medicines</h4>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <input type="text" id="medicine_name" class="form-control" placeholder="Medicine Name">
+                    </div>
+                    <div class="col">
+                        <input type="number" id="quantity" class="form-control" placeholder="Quantity">
+                    </div>
+                    <div class="col">
+                        <input type="number" id="price" class="form-control" step="0.01" placeholder="Price per Tablet">
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" id="addBtn" onclick="addOrUpdateMedicine()" class="btn btn-success">➕ Add</button>
+                    </div>
+                </div>
+
+                <table class="table table-bordered" id="med_table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+
+                <input type="hidden" name="medicine_data" id="medicine_data">
+
+                <button type="submit" class="btn btn-primary mt-3">🧾 Generate Bill</button>
+            </form>
+            {% include 'billing_app/_footer.html' %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

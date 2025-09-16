@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patients</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
+            <h3 class="mb-0">👥 All Patients</h3>
+            <a href="/" class="btn btn-sm btn-light">+ New Bill</a>
+        </div>
+        <div class="card-body">
+            {% include 'billing_app/_header.html' %}
+            {% if error_message %}
+                <div class="alert alert-warning">{{ error_message }}</div>
+            {% endif %}
+            {% if results %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Phone</th>
+                                <th>Recent Bills</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in results %}
+                                <tr>
+                                    <td>{{ p.name }}</td>
+                                    <td>{{ p.age }}</td>
+                                    <td>{{ p.phone }}</td>
+                                    <td>
+                                        {% if p.bills %}
+                                            <ul class="list-unstyled mb-0">
+                                                {% for b in p.bills %}
+                                                    <li>
+                                                        #{{ b.id }} — {{ b.created_at|date:"Y-m-d H:i" }} —
+                                                        {% if b.total_amount is not None %}
+                                                            <a href="/bill/{{ b.id }}/" class="text-decoration-none">₹{{ b.total_amount }}</a>
+                                                        {% else %}
+                                                            <span class="text-muted">Total unavailable</span>
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-muted">No bills yet</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="post" action="/patients/{{ p.id }}/delete/" onsubmit="return confirm('Delete {{ p.name }}? This will remove all related bills.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">No patients found.</div>
+            {% endif %}
+            {% include 'billing_app/_footer.html' %}
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+

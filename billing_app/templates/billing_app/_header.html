@@ -1,0 +1,72 @@
+<style>
+    .letterhead {
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .brand-title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+    .brand-subtle {
+        color: #6c757d;
+    }
+    .no-print {}
+    @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .no-print { display: none !important; }
+        .card, .card-body, .card-header { box-shadow: none !important; border: none !important; }
+        .letterhead { border-bottom: 2px solid #0d6efd !important; }
+        .footer-note { position: fixed; bottom: 10px; left: 0; right: 0; }
+    }
+</style>
+<div class="letterhead d-flex align-items-center">
+    <img src="https://img.icons8.com/color/48/000000/hospital-3.png" alt="Logo" class="me-3" width="48" height="48">
+    <div>
+        <div class="brand-title">Ganesh Medical</div>
+        <div class="brand-subtle">123 Market Road, Pune 411001 • +91 98765 43210 • ganeshmedical@example.com</div>
+    </div>
+</div>
+<script>
+  // Propagate tab id to all same-origin links and forms
+  (function() {
+    try {
+      var tid = sessionStorage.getItem('tab_id');
+      // If no tab_id yet, nothing to do until middleware injects it
+      if (!tid) return;
+      // Enforce: if URL has tab param but doesn't match this tab's tid, force login
+      try {
+        var cur = new URL(window.location.href);
+        var urlTid = cur.searchParams.get('tab');
+        if (urlTid && urlTid !== tid) {
+          window.location.replace('/login/?next=' + encodeURIComponent(window.location.pathname + window.location.search));
+          return;
+        }
+      } catch(e) {}
+      var addParam = function(url) {
+        try {
+          var u = new URL(url, window.location.origin);
+          if (u.origin !== window.location.origin) return url;
+          u.searchParams.set('tab', tid);
+          return u.toString();
+        } catch(e) { return url; }
+      };
+      Array.prototype.forEach.call(document.querySelectorAll('a[href]'), function(a){
+        a.href = addParam(a.getAttribute('href'));
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('form'), function(f){
+        var input = f.querySelector('input[name="tab"]');
+        if (!input) {
+          input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'tab';
+          f.appendChild(input);
+        }
+        input.value = tid;
+      });
+    } catch(e) {}
+  })();
+</script>
+
+

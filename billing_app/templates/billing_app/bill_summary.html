@@ -1,0 +1,83 @@
+<!-- templates/billing_app/bill_summary.html -->
+{% load form_tags %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill Summary</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .letterhead {
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .brand-title {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .brand-subtle {
+            color: #6c757d;
+        }
+        .no-print {
+            /* Hide on print */
+        }
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .card, .card-body, .card-header { box-shadow: none !important; border: none !important; }
+            .letterhead { border-bottom: 2px solid #0d6efd !important; }
+            .footer-note { position: fixed; bottom: 10px; left: 0; right: 0; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h3>💵 Final Bill Summary</h3>
+        </div>
+        <div class="card-body">
+            {% include 'billing_app/_header.html' %}
+            <p class="text-muted">Generated at: {{ bill.created_at|date:"Y-m-d H:i" }}</p>
+            <div class="alert alert-info d-flex justify-content-between" role="alert">
+                <div><strong>आजचे पेशंट:</strong> {{ today_patients_count|default:0 }}</div>
+                <div><strong>आजचे बिल:</strong> {{ today_bills_count|default:0 }}</div>
+            </div>
+            <p><strong>Patient:</strong> {{ bill.patient.name }} ({{ bill.patient.age }})</p>
+            <p><strong>Phone:</strong> {{ bill.patient.phone }}</p>
+
+            <h5 class="mt-4">💊 Medicines</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in bill.items.all %}
+                    <tr>
+                        <td>{{ item.medicine_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ item.price_per_tablet }}</td>
+                        <td>₹{{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h4 class="text-end">Total: ₹
+                {{ total_amount }}
+            </h4>
+
+            <button onclick="window.print()" class="btn btn-outline-primary mt-3 no-print">🖨️ Print</button>
+            {% include 'billing_app/_footer.html' %}
+        </div>
+    </div>
+</div>
+</body>
+</html>
